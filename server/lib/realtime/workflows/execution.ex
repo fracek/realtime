@@ -40,6 +40,8 @@ defmodule Realtime.Workflows.Execution do
 
   alias Ecto.Changeset
 
+  @schema_prefix Application.get_env(:realtime, :workflows_db_schema)
+
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Phoenix.Param, key: :id}
 
@@ -68,5 +70,12 @@ defmodule Realtime.Workflows.Execution do
   def put_workflow(changeset, workflow) do
     changeset
     |> Changeset.change(%{workflow_id: workflow.id})
+  end
+
+  @doc """
+  Returns a transaction filter that matches this table.
+  """
+  def transaction_filter do
+    "#{%__MODULE__{}.__meta__.prefix}:#{%__MODULE__{}.__meta__.source}"
   end
 end

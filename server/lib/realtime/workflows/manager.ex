@@ -4,6 +4,7 @@ defmodule Realtime.Workflows.Manager do
 
   alias Realtime.Adapters.Changes
   alias Realtime.TransactionFilter
+  alias Realtime.Workflows.Workflow
   alias Realtime.Workflows
 
   @table_name :workflows_manager
@@ -62,14 +63,7 @@ defmodule Realtime.Workflows.Manager do
   @impl true
   def handle_continue(:load_workflows, state) do
     Workflows.list_workflows()
-    |> Enum.each(fn workflow_data ->
-      with %{id: id, trigger: _, definition: _} = workflow <-
-             Map.take(workflow_data, [:id, :trigger, :definition]) do
-        :ets.insert(@table_name, {id, workflow})
-      else
-        _ -> nil
-      end
-    end)
+    |> Enum.each(fn workflow -> do_insert_workflow(@table_name, workflow) end)
     {:noreply, state}
   end
 
@@ -96,29 +90,32 @@ defmodule Realtime.Workflows.Manager do
     end
   end
 
-  defp insert_workflow(table, %Changes.NewRecord{record: record} = _change) do
-    do_insert_workflow(table, record)
+  defp insert_workflow(table, %Changes.NewRecord{record: record} = change) do
+    case Workflows.get_workflow(record["id"]) do
+      {:ok, workflow} -> do_insert_workflow(table, workflow)
+      {:not_found, _} ->
+        Logger.error("Received notification of workflow INSERT, but workflow does not exist. #{inspect change}")
+    end
   end
 
-  defp update_workflow(table, %Changes.UpdatedRecord{record: record} = _change) do
-    do_insert_workflow(table, record)
+  defp update_workflow(table, %Changes.UpdatedRecord{record: record} = change) do
+    case Workflows.get_workflow(record["id"]) do
+      {:ok, workflow} -> do_insert_workflow(table, workflow)
+      {:not_found, _} ->
+        Logger.error("Received notification of workflow UPDATE, but workflow does not exist. #{inspect change}")
+    end
   end
 
   defp delete_workflow(table, %Changes.DeletedRecord{old_record: record} = _change) do
     :ets.delete(table, record["id"])
   end
 
-  defp do_insert_workflow(table, record) do
-    workflow = %{
-      id: record["id"],
-      trigger: record["trigger"],
-      definition: record["definition"]
-    }
+  defp do_insert_workflow(table, workflow) do
     :ets.insert(table, {workflow.id, workflow})
   end
 
   defp change_type(change) do
-    if change.schema == "public" and change.table == "workflows" do
+    if change.schema == Workflow.table_schema() and change.table == Workflow.table_name() do
       case change.type do
         "INSERT" -> :insert
         "UPDATE" -> :update

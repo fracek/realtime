@@ -21,6 +21,8 @@ defmodule Realtime.Workflows.Workflow do
   alias StateMachine.Interpreter
   alias Realtime.TransactionFilter
 
+  @schema_prefix Application.get_env(:realtime, :workflows_db_schema)
+
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Phoenix.Param, key: :id}
   @required_fields ~w(name trigger definition default_execution_type default_log_type)a
@@ -46,6 +48,27 @@ defmodule Realtime.Workflows.Workflow do
     |> Changeset.unique_constraint(:name)
     |> Changeset.validate_change(:definition, &validate_state_machine/2)
     |> Changeset.validate_change(:trigger, &validate_trigger/2)
+  end
+
+  @doc """
+  Returns a transaction filter that matches this table.
+  """
+  def transaction_filter do
+    "#{%__MODULE__{}.__meta__.prefix}:#{%__MODULE__{}.__meta__.source}"
+  end
+
+  @doc """
+  Returns the table name.
+  """
+  def table_name do
+    %__MODULE__{}.__meta__.source
+  end
+
+  @doc """
+  Returns the table schema.
+  """
+  def table_schema do
+    %__MODULE__{}.__meta__.prefix
   end
 
   defp validate_state_machine(field, definition) do
