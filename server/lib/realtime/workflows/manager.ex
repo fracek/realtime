@@ -26,11 +26,15 @@ defmodule Realtime.Workflows.Manager do
   Return a list of workflows that can be triggered by change.
   """
   def workflows_for_change(txn) do
+    strict = [
+      Workflows.Execution.transaction_filter(),
+      Workflows.Workflow.transaction_filter()
+    ]
     # No need to call GenServer, we can lookup the table directly
     :ets.foldl(
       fn ({_, workflow}, acc) ->
         event = %{event: "*", relation: workflow.trigger}
-        if TransactionFilter.matches?(event, txn) do
+        if TransactionFilter.matches?(event, txn, strict: strict) do
           [workflow | acc]
         else
           acc
