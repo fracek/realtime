@@ -65,6 +65,7 @@ defmodule Realtime.Application do
         Oban,
         oban_config()
       },
+      StateMachine.SchemaResolver,
       {
         Realtime.Adapters.ConnRetry,
         conn_retry_initial_delay: db_retry_initial_delay,

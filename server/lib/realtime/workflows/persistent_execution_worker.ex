@@ -5,6 +5,7 @@ defmodule Realtime.Workflows.PersistentExecutionWorker do
 
   alias Realtime.Workflows.Manager
   alias Realtime.Workflows
+  alias StateMachine.Context
   alias StateMachine.Interpreter
 
   @impl Oban.Worker
@@ -15,7 +16,8 @@ defmodule Realtime.Workflows.PersistentExecutionWorker do
     workflow = Manager.workflow_by_id(workflow_id)
     {:ok, execution} = Workflows.get_workflow_execution(execution_id)
 
-    Interpreter.start_execution(workflow, execution)
+    ctx = Context.create(workflow, execution)
+    Interpreter.start_execution(ctx, workflow.definition)
     :ok
   end
 end

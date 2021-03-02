@@ -50,9 +50,10 @@ defmodule Realtime.MixProject do
       {:ecto_sql, "~> 3.4"},
       {:oban, "~> 2.4"},
       {:postgrex, "~> 0.15.8"},
-      {:states_language, "~> 0.2.10"},
+      {:ex_json_schema, "~> 0.8.0-rc1"},
+      {:warpath, "~> 0.6.0"},
       {:temp, "~> 0.4.7"},
-      {:decimal, "~> 2.0.0", override: true},
+      #{:decimal, "~> 2.0.0", override: true},
       {:mock, "~> 0.3.0", only: :test}
     ]
   end
