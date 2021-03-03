@@ -52,6 +52,7 @@ defmodule Realtime.MixProject do
       {:postgrex, "~> 0.15.8"},
       {:ex_json_schema, "~> 0.8.0-rc1"},
       {:warpath, "~> 0.6.0"},
+      {:nimble_parsec, "~> 1.1"},
       {:temp, "~> 0.4.7"},
       #{:decimal, "~> 2.0.0", override: true},
       {:mock, "~> 0.3.0", only: :test}
