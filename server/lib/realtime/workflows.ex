@@ -69,7 +69,8 @@ defmodule Realtime.Workflows do
     task = Task.async(fn ->
       with {:ok, execution} <- invoke_workflow(workflow, attrs, reply_to: self()) do
         receive do
-          {:ok, msg} -> {:ok, msg, execution}
+          {:success, msg} -> {:ok, msg, execution}
+          {:failure, msg} -> {:error, msg, execution}
           err -> {:error, err, execution}
         after
           5_000 -> {:timeout, execution}

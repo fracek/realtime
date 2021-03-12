@@ -1,20 +1,17 @@
 defmodule StateMachine.Context do
-  defstruct [:workflow, :execution, :resources, :reply_to]
+  @type user_ctx :: any()
 
-  def create(workflow, execution, opts \\ []) do
-    config = interpreter_configuration()
-    resources = Keyword.get(config, :resources)
-    reply_to = Keyword.get(opts, :reply_to)
+  @type t :: %__MODULE__{
+               user_ctx: user_ctx(),
+               resource_handler: any()
+             }
 
+  defstruct [:user_ctx, :resource_handler]
+
+  def create(user_ctx, resource_handler) do
     %__MODULE__{
-      workflow: workflow,
-      execution: execution,
-      resources: resources,
-      reply_to: reply_to
+      user_ctx: user_ctx,
+      resource_handler: resource_handler
     }
-  end
-
-  defp interpreter_configuration() do
-    Application.fetch_env!(:realtime, StateMachine)
   end
 end

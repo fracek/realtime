@@ -6,6 +6,9 @@ defmodule StateMachine.Retrier do
 
    * https://states-language.net/#errors
   """
+
+  @type t :: any()
+
   defstruct [:error_equals, :interval_seconds, :max_attempts, :backoff_rate, :attempt]
 
   @default_interval_seconds 1

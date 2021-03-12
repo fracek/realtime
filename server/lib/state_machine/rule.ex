@@ -4,6 +4,11 @@ defmodule StateMachine.Rule do
   """
   defstruct [:next, :rule]
 
+  @type t :: %__MODULE__{
+    next: String.t(),
+    rule: (map() -> boolean())
+  }
+
   @doc """
   Create a rule that can be matched on an input.
   """

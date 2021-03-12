@@ -9,6 +9,18 @@ defmodule StateMachine.PayloadTemplate do
 
   alias StateMachine.Intrinsic
 
+  @opaque t :: module()
+
+  defstruct [:template]
+
+  @doc """
+  Create a payload template.
+  """
+  def create(template) do
+    # TODO: validate payload template
+    {:ok, %__MODULE__{template: template}}
+  end
+
   @doc """
   Apply payload template to arguments, returning a new, transformed output.
   """
