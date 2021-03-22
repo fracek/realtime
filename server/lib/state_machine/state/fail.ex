@@ -10,17 +10,19 @@ defmodule StateMachine.State.Fail do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                error: String.t(),
                cause: String.t(),
              }
 
-  defstruct [:error, :cause]
+  defstruct [:name, :error, :cause]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, error} <- parse_error(definition),
          {:ok, cause} <- parse_cause(definition) do
       state = %__MODULE__{
+        name: state_name,
         error: error,
         cause: cause,
       }

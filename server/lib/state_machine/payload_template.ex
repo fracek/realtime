@@ -25,7 +25,7 @@ defmodule StateMachine.PayloadTemplate do
   Apply payload template to arguments, returning a new, transformed output.
   """
   def apply(template, ctx, args) when is_map(template) do
-    do_apply(template, ctx, args, [])
+    do_apply(template.template, ctx, args, [])
   end
 
   def apply(nil, ctx, args) do

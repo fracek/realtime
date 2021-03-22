@@ -13,9 +13,10 @@ defmodule StateMachine.State.Choice do
 
   use State
 
-  defstruct [:default, :choices, :input_path, :output_path]
+  defstruct [:name, :default, :choices, :input_path, :output_path]
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                default: State.state_name() | nil,
                choices: nonempty_list(Rule.t()),
                input_path: Path.t() | nil,
@@ -23,12 +24,13 @@ defmodule StateMachine.State.Choice do
              }
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, default} <- parse_default(definition),
          {:ok, choices} <- parse_choices(definition),
          {:ok, input_path} <- StateUtil.parse_input_path(definition),
          {:ok, output_path} <- StateUtil.parse_output_path(definition) do
       state = %__MODULE__{
+        name: state_name,
         default: default,
         choices: choices,
         input_path: input_path,

@@ -15,6 +15,7 @@ defmodule StateMachine.State.Parallel do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                branches: nonempty_list(Machine.t()),
                transition: State.transition(),
                input_path: Path.t() | nil,
@@ -27,6 +28,7 @@ defmodule StateMachine.State.Parallel do
              }
 
   defstruct [
+    :name,
     :branches,
     :transition,
     :input_path,
@@ -39,7 +41,7 @@ defmodule StateMachine.State.Parallel do
   ]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, branches} <- parse_branches(definition),
          {:ok, transition} <- StateUtil.parse_transition(definition),
          {:ok, input_path} <- StateUtil.parse_input_path(definition),
@@ -50,6 +52,7 @@ defmodule StateMachine.State.Parallel do
          {:ok, retry} <- StateUtil.parse_retry(definition),
          {:ok, catch_} <- StateUtil.parse_catch(definition) do
        state = %__MODULE__{
+         name: state_name,
          branches: branches,
          transition: transition,
          input_path: input_path,
@@ -68,6 +71,7 @@ defmodule StateMachine.State.Parallel do
     handler = ctx.resource_handler
     case handler.handle_parallel(state, ctx, args) do
       {:ok, value} -> StateUtil.continue_with_result(state, value)
+      {:yield, value} -> StateUtil.yield_result(state, value)
       {:error, error} ->
         {:error, "Parallel Retry/Catch not implemented"}
     end

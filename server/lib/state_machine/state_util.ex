@@ -16,6 +16,10 @@ defmodule StateMachine.StateUtil do
     end
   end
 
+  def yield_result(state, result) do
+    {:yield, result}
+  end
+
   def apply_input_path(state, args) do
     apply_path(state.input_path, args)
   end

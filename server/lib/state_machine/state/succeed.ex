@@ -10,17 +10,19 @@ defmodule StateMachine.State.Succeed do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                input_path: Path.t() | nil,
                output_path: Path.t() | nil,
              }
 
-  defstruct [:input_path, :output_path]
+  defstruct [:name, :input_path, :output_path]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, input_path} <- StateUtil.parse_input_path(definition),
          {:ok, output_path} <- StateUtil.parse_output_path(definition) do
       state = %__MODULE__{
+        name: state_name,
         input_path: input_path,
         output_path: output_path
       }

@@ -15,6 +15,7 @@ defmodule StateMachine.State.Map do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                iterator: Machine.t(),
                items_path: ReferencePath.t() | nil,
                max_concurrency: non_neg_integer(),
@@ -29,6 +30,7 @@ defmodule StateMachine.State.Map do
              }
 
   defstruct [
+    :name,
     :iterator,
     :items_path,
     :max_concurrency,
@@ -43,7 +45,7 @@ defmodule StateMachine.State.Map do
   ]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, iterator} <- parse_iterator(definition),
          {:ok, items_path} <- parse_items_path(definition),
          {:ok, max_concurrency} <- parse_max_concurrency(definition),
@@ -56,6 +58,7 @@ defmodule StateMachine.State.Map do
          {:ok, retry} <- StateUtil.parse_retry(definition),
          {:ok, catch_} <- StateUtil.parse_catch(definition) do
        state = %__MODULE__{
+         name: state_name,
          iterator: iterator,
          items_path: items_path,
          max_concurrency: max_concurrency,
@@ -76,6 +79,7 @@ defmodule StateMachine.State.Map do
     handler = ctx.resource_handler
     case handler.handle_map(state, ctx, args) do
       {:ok, value} -> StateUtil.continue_with_result(state, value)
+      {:yield, value} -> StateUtil.yield_result(state, value)
       {:error, error} ->
         {:error, "Map Retry/Catch not implemented"}
     end

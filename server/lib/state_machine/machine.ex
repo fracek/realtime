@@ -22,6 +22,18 @@ defmodule StateMachine.Machine do
     execute_state(state_machine, state_machine.start_at, ctx, args)
   end
 
+  @spec resume(t(), State.state_name() | State.t(), Context.t(), State.args(), State.args()) :: result()
+  def resume(state_machine, state_name_or_state, ctx, state_args, result) do
+    with {:ok, state} <- do_get_state(state_machine, state_name_or_state) do
+      case State.resume(state, ctx, state_args, result) do
+        {:continue, next_state_name, result} ->
+          execute_state(state_machine, next_state_name, ctx, result)
+        result -> result
+      end
+    end
+  end
+
+  @spec handle_state(t(), State.state_name(), Context.t(), State.args()) :: State.result()
   def handle_state(state_machine, state_name, ctx, args) when is_binary(state_name) do
     state = state_machine.states[state_name]
     State.handle_state(state, ctx, args)
@@ -33,10 +45,19 @@ defmodule StateMachine.Machine do
     case handle_state(state_machine, state_name, ctx, args) do
       {:continue, next_state_name, result} ->
         execute_state(state_machine, next_state_name, ctx, result)
-      {:success, result} ->
-        {:success, result}
-      failure -> failure
+      result -> result
     end
+  end
+
+  defp do_get_state(machine, state_name_or_state) when is_binary(state_name_or_state) do
+    case Map.fetch(machine.states, state_name_or_state) do
+      {:ok, state} -> {:ok, state}
+      :error -> {:error, "state #{state_name_or_state} not found"}
+    end
+  end
+
+  defp do_get_state(_machine, state) do
+    {:ok, state}
   end
 
   defp do_parse(%{"StartAt" => start_at, "States" => states}) do
@@ -54,7 +75,7 @@ defmodule StateMachine.Machine do
   defp parse_states([], acc), do: {:ok, Enum.into(acc, %{})}
 
   defp parse_states([{state_name, state_def} | states], acc) do
-    with {:ok, state} = State.parse(state_def) do
+    with {:ok, state} = State.parse(state_name, state_def) do
       parse_states(states, [{state_name, state} | acc])
     end
   end

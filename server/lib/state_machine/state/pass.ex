@@ -12,6 +12,7 @@ defmodule StateMachine.State.Pass do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                result: State.args(),
                transition: State.transition(),
                input_path: Path.t() | nil,
@@ -20,10 +21,10 @@ defmodule StateMachine.State.Pass do
                parameters: PayloadTemplate.t() | nil
              }
 
-  defstruct [:result, :transition, :input_path, :output_path, :result_path, :parameters]
+  defstruct [:name, :result, :transition, :input_path, :output_path, :result_path, :parameters]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     result = parse_result(definition)
     with {:ok, transition} <- StateUtil.parse_transition(definition),
          {:ok, input_path} <- StateUtil.parse_input_path(definition),
@@ -31,6 +32,7 @@ defmodule StateMachine.State.Pass do
          {:ok, result_path} <- StateUtil.parse_result_path(definition),
          {:ok, parameters} <- StateUtil.parse_parameters(definition) do
        state = %__MODULE__{
+         name: state_name,
          result: result,
          transition: transition,
          input_path: input_path,

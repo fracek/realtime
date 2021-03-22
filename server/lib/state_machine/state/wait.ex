@@ -17,6 +17,7 @@ defmodule StateMachine.State.Wait do
           | {:timestamp_path, Path.t()}
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                wait: wait(),
                transition: State.transition(),
                input_path: Path.t() | nil,
@@ -30,15 +31,16 @@ defmodule StateMachine.State.Wait do
 
   @required_keys_error "Must have at most one of Seconds, SecondsPath, Timestamp, TimestampPath"
 
-  defstruct [:wait, :transition, :input_path, :output_path]
+  defstruct [:name, :wait, :transition, :input_path, :output_path]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, wait} <- parse_wait(definition),
          {:ok, transition} <- StateUtil.parse_transition(definition),
          {:ok, input_path} <- StateUtil.parse_input_path(definition),
          {:ok, output_path} <- StateUtil.parse_output_path(definition) do
       state = %__MODULE__{
+        name: state_name,
         wait: wait,
         transition: transition,
         input_path: input_path,
@@ -52,9 +54,9 @@ defmodule StateMachine.State.Wait do
   def handle(state, ctx, args) do
     handler = ctx.resource_handler
     with {:ok, wait} <- resolve_wait(state.wait, args) do
-      IO.inspect wait
       case handler.handle_wait(state, wait, ctx.user_ctx, args) do
         {:ok, value} -> StateUtil.continue_with_result(state, value)
+        {:yield, value} -> StateUtil.yield_result(state, value)
         {:error, error} ->
           {:error, "Wait Retry/Catch not implemented"}
       end

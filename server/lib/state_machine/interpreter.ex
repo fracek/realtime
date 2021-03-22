@@ -15,6 +15,12 @@ defmodule StateMachine.Interpreter do
     Machine.start(state_machine, ctx, args)
   end
 
+  def resume_execution(user_context, resource_handler, state_machine, state_name, state_args, result) do
+    ctx = Context.create(user_context, resource_handler)
+    Logger.debug("Resume execution #{inspect state_name} #{inspect state_args} #{inspect result}")
+    Machine.resume(state_machine, state_name, ctx, state_args, result)
+  end
+
   def state_machine_valid?(definition) do
     with :ok <- StatesLanguage.validate(definition),
          {:ok, _} <- Machine.parse(definition) do

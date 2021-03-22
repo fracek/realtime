@@ -14,6 +14,7 @@ defmodule StateMachine.State.Task do
   use State
 
   @type t :: %__MODULE__{
+               name: State.state_name(),
                resource: String.t(),
                timeout: {:value, pos_integer()} | {:reference, ReferencePath.t()} | nil,
                heartbeat: {:value, pos_integer()} | {:reference, ReferencePath.t()} | nil,
@@ -28,6 +29,7 @@ defmodule StateMachine.State.Task do
              }
 
   defstruct [
+    :name,
     :resource,
     :timeout,
     :heartbeat,
@@ -42,7 +44,7 @@ defmodule StateMachine.State.Task do
   ]
 
   @impl State
-  def parse(definition) do
+  def parse(state_name, definition) do
     with {:ok, resource} <- parse_resource(definition),
          {:ok, timeout} <- parse_timeout(definition),
          {:ok, heartbeat} <- parse_heartbeat(definition),
@@ -55,6 +57,7 @@ defmodule StateMachine.State.Task do
          {:ok, retry} <- StateUtil.parse_retry(definition),
          {:ok, catch_} <- StateUtil.parse_catch(definition) do
        state = %__MODULE__{
+         name: state_name,
          resource: resource,
          timeout: timeout,
          heartbeat: heartbeat,
@@ -75,6 +78,7 @@ defmodule StateMachine.State.Task do
     handler = ctx.resource_handler
     case handler.handle_task(state, ctx.user_ctx, args) do
       {:ok, value} -> StateUtil.continue_with_result(state, value)
+      {:yield, value} -> StateUtil.yield_result(state, value)
       {:error, error} ->
         {:error, "Task Retry/Catch not implemented"}
     end
